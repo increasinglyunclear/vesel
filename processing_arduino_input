@@ -2,9 +2,12 @@
 // READ/WRITE FROM LOCAL TEXT FILE
 // VISUALISE WITH SIMPLE GREYSCALE DISPLAY ON-SCREEN
 
+// THIS VERSION ADDS FTP UPLOAD VIA APPLESCRIPT
+// KEVIN WALKER 2008
+
 import processing.serial.*;
 import cc.arduino.*;
-
+import com.apple.cocoa.foundation.*; // Applescript support
 Arduino arduino; // Firmata arduino init
 PrintWriter output; // for writing to external text file
 int timer = millis(); // create timer
@@ -80,6 +83,16 @@ void draw() {
 
     saveFrame("photocell.jpg"); // export jpeg
 
+    //Applescript uploading:
+    String script = "tell application \"Finder\" to open application file \"Fetch 4.0.3\" of folder \"Fetch 4.0.3 Folder Store\" of folder \"Applications\" of startup disk";
+    executeScript(script);
+    String script2 = "tell application \"Fetch 4.0.3\" to open remote directory \"ftp://THOR%5ckevin:@thor.dcs.bbk.ac.uk/%2f/projects/vesel/files\"";
+    executeScript(script2);
+    String script3 = "tell application \"Fetch 4.0.3\" to put into transfer window \"thor.dcs.bbk.ac.uk\" item alias \"Macintosh HD:Users:kevinwalker1:Documents:Processing:arduino_input_vesel02:photocell.txt\"";
+    executeScript(script3);
+    String script4 = "tell application \"Fetch 4.0.3\" to put into transfer window \"thor.dcs.bbk.ac.uk\" item alias \"Macintosh HD:Users:kevinwalker1:Documents:Processing:arduino_input_vesel02:photocell.jpg\"";
+    executeScript(script4);
+
     // CREATE NEW TEXT FILE AND START AGAIN
     output = createWriter("photocell.txt");  // create new text file
     for (int i=0; i < lines.length; i++) { // go through each saved line and
@@ -89,6 +102,19 @@ void draw() {
     timer = millis(); // reset timer
     //}
   }
+}
+
+void keyPressed() {
+  output.flush(); // Writes the remaining data to the file
+  output.close(); // Finishes the file
+  exit(); // Stops the program
+}
+
+// APPLESCRIPT STUFF
+void executeScript(String script) {
+  NSAppleScript myScript = new NSAppleScript(script);
+  NSMutableDictionary errors = new NSMutableDictionary();
+  myScript.execute(errors);  
 }
 
 void keyPressed() {
